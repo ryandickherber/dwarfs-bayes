@@ -10,8 +10,8 @@ class Observation:
 		#TODO: fill in realistic default values
 		self.Ci=4.0
 		self.Ti=20*60 #seconds
-		self.Npi=100 #on counts
-		self.Nmi=400 #off counts
+		self.Npi=1000 #on counts
+		self.Nmi=4000 #off counts
 		self.Ri=150.0 #reconstructed energy average
 		#self.Ri0=100.0 #reconstructed energy bottom GeV
 		#self.Ri1=200.0 #reconstructed energy top GeV
@@ -51,14 +51,10 @@ class Bayes:
 		self.memoizedict={}
 
 	def P_Nnpi(self, obs, Nnpi):
-		top=PoissonApprox2(obs.Nmi,obs.Ci*Nnpi)
-		Nnpi_cutoff=int(3*obs.Nmi/obs.Ci)
-		if Nnpi_cutoff<30:
-			Nnpi_cutoff=30
-		bottom=0
-		for Nnpi in range(Nnpi_cutoff):
-			bottom=bottom+PoissonApprox2(obs.Nmi,obs.Ci*Nnpi)
-		prob=top/bottom
+		#Note that this is using the approximation that a sum over lambda
+		#for a Poisson is ~1 if lambda is big. The approx. works for
+		#lambda >~ 10
+		prob=PoissonApprox2(obs.Nmi,obs.Ci*Nnpi)
 		#print("P_Nnpi: %s" % prob)
 		return prob
 
