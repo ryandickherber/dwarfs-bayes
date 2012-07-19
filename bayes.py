@@ -39,6 +39,17 @@ class Observation:
 		self.Jirange=[(4.5,5.5),(5.5,6.5),(6.5,7.5)]
 		self.P_Ji=[0.25, 0.5, 0.25]
 
+	def save(self, filename):
+		f=open(filename, 'wb')
+		pickle.dump(self, f)
+		f.close()
+	
+	def open(self, filename):
+		f=open(filename, 'r')
+		o=pickle.load(f)
+		f.close()
+		return o
+
 class Bayes:
 	def __init__(self, Mchi=400.0, Slist=[0,1,2,3,4,5,6,7,8,9,10]):
 		self.Mchi=Mchi #GeV #TODO: fill in realistic value for mass
