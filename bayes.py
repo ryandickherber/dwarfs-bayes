@@ -45,7 +45,7 @@ class Observation:
 		f.close()
 	
 	def open(self, filename):
-		f=open(filename, 'r')
+		f=open(filename, 'rb')
 		o=pickle.load(f)
 		f.close()
 		return o
@@ -61,43 +61,52 @@ class Bayes:
 		self.P_S_sum=0
 		self.memoizedict={}
 
-	def P_Nnpi(self, obs, Nnpi):
+	def load_observations(self, filelist):
+		f=open(filelist, 'rb')
+		self.observations=[]
+		for line in f.readlines():
+			filename=line.strip()
+			o=Observation()
+			o=o.open(filename)
+			self.observations.append(o)
+
+	def P_Nbpi(self, obs, Nbpi):
 		#Note that this is using the approximation that a sum over lambda
 		#for a Poisson is ~1 if lambda is big. The approx. works for
 		#lambda >~ 10
-		prob=PoissonApprox2(obs.Nmi,obs.Ci*Nnpi)
-		#print("P_Nnpi: %s" % prob)
+		prob=PoissonApprox2(obs.Nmi,obs.Ci*Nbpi)
+		#print("P_Nbpi: %s" % prob)
 		return prob
 
-	def P_Npi_JiAiEiNnpiS(self, obs, iJi, iAi, iEi, Nnpi, S):
+	def P_Npi_JiAiEiNbpiS(self, obs, iJi, iAi, iEi, Nbpi, S):
 		Mchi=self.Mchi
 		Ngi=S/(8*math.pi*(Mchi**2))*\
 			integrate_dNdE(obs.Eirange[iEi][0],obs.Eirange[iEi][1])\
 			*obs.Ai[iEi][iAi]*obs.Ti*obs.Ji[iJi]
-		lmbda=Nnpi+Ngi
+		lmbda=Nbpi+Ngi
 		k=obs.Npi
 		prob=PoissonApprox2(k,lmbda)
-		#print("P_Npi_JiAiEiNnpiS: %s" % prob)
+		#print("P_Npi_JiAiEiNbpiS: %s" % prob)
 		return PoissonApprox2(k,lmbda)
 
-	def P_Npi_NnpiS(self, obs, Nnpi, S):
+	def P_Npi_NbpiS(self, obs, Nbpi, S):
 		p=[]
 		for iEi, Ei in enumerate(obs.Ei):
 			for iAi, Ai in enumerate(obs.Ai[iEi]):
 				for iJi, Ji in enumerate(obs.Ji):
-					P=self.P_Npi_JiAiEiNnpiS(obs, iJi, iAi, iEi, Nnpi, S)
+					P=self.P_Npi_JiAiEiNbpiS(obs, iJi, iAi, iEi, Nbpi, S)
 					P=P*obs.P_Ji[iJi]*obs.P_Ai[iEi][iAi]*obs.P_Ei[iEi]
 					p.append(P)
 		prob=math.fsum(p)
-		#print("P_Npi_NnpiS: %s" % prob)
+		#print("P_Npi_NbpiS: %s" % prob)
 		return math.fsum(p)
 
 	def P_Npi_S(self, obs, S):
-		Nnpi_cutoff=int(3*obs.Nmi/obs.Ci)
-		if Nnpi_cutoff<30:
-			Nnpi_cutoff=30
-		p=[self.P_Nnpi(obs, Nnpi)*self.P_Npi_NnpiS(obs, Nnpi, S)\
-			for Nnpi in range(Nnpi_cutoff)]
+		Nbpi_cutoff=int(3*obs.Nmi/obs.Ci)
+		if Nbpi_cutoff<30:
+			Nbpi_cutoff=30
+		p=[self.P_Nbpi(obs, Nbpi)*self.P_Npi_NbpiS(obs, Nbpi, S)\
+			for Nbpi in range(Nbpi_cutoff)]
 		prob=math.fsum(p)
 		#print("P_Npi_S: %s" % prob)
 		return prob
@@ -253,7 +262,8 @@ class PoissonInterp:
 
 if __name__=="__main__":
 	b=Bayes()
-	b.observations=[Observation()]
+	filelist="data_test.list"
+	b.load_observations(filelist)
 	for S in b.Slist:
 		P=b.P_S_Np(S)
 		print("S, P: %s, %s" % (S,P))
