@@ -1,4 +1,5 @@
 #python 2.7
+import argparse
 import pickle
 import time
 import math
@@ -51,11 +52,17 @@ class Observation:
 		return o
 
 class Bayes:
-	def __init__(self, Mchi=400.0, Slist=[0,1,2,3,4,5,6,7,8,9,10]):
+	def __init__(self, Mchi=400.0,\
+			dNdE_option="1"):
+
+		if dNdE_option=="1":
+			self.integrate_dNdE=integrate_dNdE_1
+		else:
+			self.integrate_dNdE=integrate_dNdE_1
 		self.Mchi=Mchi #GeV #TODO: fill in realistic value for mass
 
 		#TODO: fill in realistic values for cross section
-		self.Slist=Slist
+		self.Slist=Slist=[0,1,2,3,4,5,6,7,8,9,10]
 
 		self.observations=[]
 		self.P_S_sum=0
@@ -81,7 +88,7 @@ class Bayes:
 	def P_Npi_JiAiEiNbpiS(self, obs, iJi, iAi, iEi, Nbpi, S):
 		Mchi=self.Mchi
 		Ngi=S/(8*math.pi*(Mchi**2))*\
-			integrate_dNdE(obs.Eirange[iEi][0],obs.Eirange[iEi][1])\
+			self.integrate_dNdE(obs.Eirange[iEi][0],obs.Eirange[iEi][1])\
 			*obs.Ai[iEi][iAi]*obs.Ti*obs.Ji[iJi]
 		lmbda=Nbpi+Ngi
 		k=obs.Npi
@@ -146,8 +153,14 @@ class Bayes:
 			self.P_S_sum=math.fsum(B)
 		bottom=self.P_S_sum
 		return top/bottom
+	
+	def P_S_Np_all(self):
+		P_Slist=[]
+		for j,S in enumerate(self.Slist):
+			P_Slist.append(self.P_S_Np(Slist[j]))
+		return P_Slist
 
-def integrate_dNdE(Ei0, Ei1):
+def integrate_dNdE_1(Ei0, Ei1):
 	#TODO: make this work
 	return 1.0
 
@@ -261,11 +274,27 @@ class PoissonInterp:
 		return self.f(k)
 
 if __name__=="__main__":
-	b=Bayes()
-	filelist="data_test.list"
+	parser = argparse.ArgumentParser(description='filelist is data, Mchi is in GeV, and dNdE_option is which channel')
+	parser.add_argument('--filelist', type=str, nargs=1, required=True)
+	parser.add_argument('--Mchi', type=float, nargs=1, required=True)
+	parser.add_argument('--dNdE_option', type=str, nargs=1, required=True)
+	args=parser.parse_args()
+	Mchi=args.Mchi[0]
+	dNdE_option=args.dNdE_option[0]
+	filelist=args.filelist[0]
+	print("Options: filelist=%s, Mchi=%s, dNdE_option=%s"\
+		% (filelist, Mchi, dNdE_option))
+	print("Loading data...")
+	b=Bayes(Mchi=Mchi, dNdE_option=dNdE_option)
 	b.load_observations(filelist)
-	for S in b.Slist:
-		P=b.P_S_Np(S)
-		print("S, P: %s, %s" % (S,P))
-	print("Sum over P: %s" % math.fsum(\
-		[b.P_S_Np(S) for S in b.Slist]))
+	print("Calculating probabilities...")
+	Slist=b.Slist
+	P_Slist=b.P_S_Np_all()
+	P_sum=0
+	print("S\tP\tP_sum")
+	for j,S in enumerate(Slist):
+		P=P_Slist[j]
+		P_sum=P_sum+P
+		print("%s\t%s\t%s" % (S, P, P_sum))
+	#print("Sum over P: %s" % math.fsum(\
+	#	[b.P_S_Np(S) for S in b.Slist]))
