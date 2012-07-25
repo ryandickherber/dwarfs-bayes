@@ -67,6 +67,7 @@ class Bayes:
 		self.observations=[]
 		self.P_S_sum=0
 		self.memoizedict={}
+		#self.memoizedict2={}
 
 	def load_observations(self, filelist):
 		f=open(filelist, 'rb')
@@ -78,11 +79,26 @@ class Bayes:
 			self.observations.append(o)
 
 	def P_Nbpi(self, obs, Nbpi):
-		#Note that this is using the approximation that a sum over lambda
-		#for a Poisson is ~1 if lambda is big. The approx. works for
-		#lambda >~ 10
-		prob=PoissonApprox2(obs.Nmi,obs.Ci*Nbpi)
-		#print("P_Nbpi: %s" % prob)
+		top=PoissonApprox2(obs.Nmi,obs.Ci*Nbpi)
+
+		##memoize the bottom part
+		#if obs.Nmi in self.memoizedict2:
+		#	if obs.Ci*Nbpi in self.memoizedict2[obs.Nmi]:
+		#		bottom=self.memoizedict2[obs.Nmi][obs.Ci*Nbpi]
+		#	else:
+		#		self.memoizedict2[obs.Nmi][obs.Ci*Nbpi]=math.fsum(\
+		#			[PoissonApprox2(obs.Nmi,obs.Ci*Nbpi2)\
+		#			for Nbpi2 in range(obs.Nmi*3)])
+		#		bottom=self.memoizedict2[obs.Nmi][obs.Ci*Nbpi]
+		#else:
+		#	self.memoizedict2[obs.Nmi]={}
+		#	self.memoizedict2[obs.Nmi][obs.Ci*Nbpi]=math.fsum(\
+		#		[PoissonApprox2(obs.Nmi,obs.Ci*Nbpi2)\
+		#		for Nbpi2 in range(obs.Nmi*3)])
+		#	bottom=self.memoizedict2[obs.Nmi][obs.Ci*Nbpi]
+		bottom=1.0/(obs.Ci)
+		prob=top/bottom
+
 		return prob
 
 	def P_Npi_JiAiEiNbpiS(self, obs, iJi, iAi, iEi, Nbpi, S):
@@ -157,7 +173,7 @@ class Bayes:
 	def P_S_Np_all(self):
 		P_Slist=[]
 		for j,S in enumerate(self.Slist):
-			P_Slist.append(self.P_S_Np(Slist[j]))
+			P_Slist.append(self.P_S_Np(self.Slist[j]))
 		return P_Slist
 
 def integrate_dNdE_1(Ei0, Ei1):
