@@ -28,6 +28,14 @@ b=bayes.Bayes()
 o=bayes.Observation()
 print("P_Nbpi: %s" % math.fsum([b.P_Nbpi(o,Nbpi) for Nbpi in range(3*4000)]))
 
+#P_Npi_NbpiS
+b=bayes.Bayes()
+o=bayes.Observation()
+b.observations=[o]
+S=b.Slist[3]
+P=[b.P_Npi_NbpiS(o,Nbpi,S) for Nbpi in range(3*4000)]
+print("P_Npi_NbpiS: %s" % math.fsum(P))
+
 #P_Npi_S
 #to sum this we must produce every sensible number of on counts,
 #given that the off counts are 4000 (the default)
