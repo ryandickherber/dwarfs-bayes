@@ -62,7 +62,8 @@ class Bayes:
 		self.Mchi=Mchi #GeV #TODO: fill in realistic value for mass
 
 		#TODO: fill in realistic values for cross section
-		self.Slist=Slist=[0,1,2,3,4,5,6,7,8,9,10]
+		self.Slist=[0,1,2,3,4,5,6,7,8,9,10]
+		self.Slist=[10**(-26+(26-19)*n/100) for n in range(101)]
 
 		self.observations=[]
 		self.P_S_sum=0
@@ -103,7 +104,7 @@ class Bayes:
 
 	def P_Npi_JiAiEiNbpiS(self, obs, iJi, iAi, iEi, Nbpi, S):
 		Mchi=self.Mchi
-		Ngi=S/(8*math.pi*(Mchi**2))*\
+		Ngi=(S/(8*math.pi*(Mchi**2)))*\
 			self.integrate_dNdE(obs.Eirange[iEi][0],obs.Eirange[iEi][1])\
 			*obs.Ai[iEi][iAi]*obs.Ti*obs.Ji[iJi]
 		lmbda=Nbpi+Ngi
@@ -139,8 +140,10 @@ class Bayes:
 		T=[]
 		for obs in self.observations:
 			P=self.P_Npi_S(obs, S)
-			if P!=0:
+			if P!=0.0:
 				T.append(math.log(P))
+			else:
+				return 0.0
 		t=math.fsum(T)
 		t=math.exp(t)
 		return t
