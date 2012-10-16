@@ -4,22 +4,22 @@ import math
 print("PoissonApprox2 sum over lmbda. Should be ~1 for large k.")
 k=1
 print("PoissonApprox2 (k=%s): %s" % (k,math.fsum(\
-	[bayes.PoissonApprox2(k,lmbda) for lmbda in range(k*3)])))
+    [bayes.PoissonApprox2(k,lmbda) for lmbda in range(k*3)])))
 k=2
 print("PoissonApprox2 (k=%s): %s" % (k,math.fsum(\
-	[bayes.PoissonApprox2(k,lmbda) for lmbda in range(k*3)])))
+    [bayes.PoissonApprox2(k,lmbda) for lmbda in range(k*3)])))
 k=5
 print("PoissonApprox2 (k=%s): %s" % (k,math.fsum(\
-	[bayes.PoissonApprox2(k,lmbda) for lmbda in range(k*3)])))
+    [bayes.PoissonApprox2(k,lmbda) for lmbda in range(k*3)])))
 k=10
 print("PoissonApprox2 (k=%s): %s" % (k,math.fsum(\
-	[bayes.PoissonApprox2(k,lmbda) for lmbda in range(k*3)])))
+    [bayes.PoissonApprox2(k,lmbda) for lmbda in range(k*3)])))
 k=100
 print("PoissonApprox2 (k=%s): %s" % (k,math.fsum(\
-	[bayes.PoissonApprox2(k,lmbda) for lmbda in range(k*3)])))
+    [bayes.PoissonApprox2(k,lmbda) for lmbda in range(k*3)])))
 k=1000
 print("PoissonApprox2 (k=%s): %s" % (k,math.fsum(\
-	[bayes.PoissonApprox2(k,lmbda) for lmbda in range(k*3)])))
+    [bayes.PoissonApprox2(k,lmbda) for lmbda in range(k*3)])))
 
 print("All probabilities that follow should be ~1.")
 
@@ -44,8 +44,8 @@ print("P_Npi_NbpiS: %s" % math.fsum(P))
 b=bayes.Bayes()
 b.observations=[bayes.Observation() for i in range(500)]
 for i,o in enumerate(b.observations):
-	o.Nmi=100
-	o.Npi=i
+    o.Nmi=100
+    o.Npi=i
 S=b.Slist[3]
 print("P_Npi_S: %s" % math.fsum([b.P_Npi_S(o,S) for o in b.observations]))
 
