@@ -1,1 +1,2 @@
-Python code for Bayesian analysis of dwarf galaxies
+Python code for Bayesian analysis of dwarf galaxies.
+Main code is bayes.py. continuum code originally written by Jim Buckley.
