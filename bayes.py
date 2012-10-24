@@ -5,21 +5,23 @@ import time
 import math
 from numpy import r_
 import scipy.interpolate
-
-NEi=31
-Eistart=200.0
-Eiincrement=0.15
+import constants
 
 class Observation:
     def __init__(self):
+        self.RunNum=0
+        self.EnergyBinIndex=0
+        self.EnergyBin=[200.0,200.0+200.0*0.15]
+
         #TODO: fill in realistic default values
         self.Ci=4.0
         self.Ti=20*60 #seconds
         self.Npi=1000 #on counts
         self.Nmi=4000 #off counts
-        self.Ri=150.0 #reconstructed energy average
+        #self.Ri=150.0 #reconstructed energy average
         #self.Ri0=100.0 #reconstructed energy bottom GeV
         #self.Ri1=200.0 #reconstructed energy top GeV
+        self.EnergyBinIndexes=[0,1,2]
         self.Ei=[50.0, 150.0, 250.0] #true energy average in GeV
         self.Eirange=[(10.0,100.0),(100.0,200.0),(200.0,400.0)]
         self.P_Ei=[0.25, 0.5, 0.25]
@@ -29,11 +31,11 @@ class Observation:
             [10000.0],\
             [11000.0],\
             ]
-        self.Airange=[\
-            [(4000.0,6000.0)],\
-            [(9000.0,11000.0)],\
-            [(10000.0,12000.0)],\
-            ]
+        #self.Airange=[\
+        #    [(4000.0,6000.0)],\
+        #    [(9000.0,11000.0)],\
+        #    [(10000.0,12000.0)],\
+        #    ]
         self.P_Ai=[\
             [1.0],\
             [1.0],\
@@ -66,13 +68,14 @@ class Bayes:
         self.Mchi=Mchi #GeV #TODO: fill in realistic value for mass
 
         #TODO: fill in realistic values for cross section
-        self.Slist=[0,1,2,3,4,5,6,7,8,9,10]
-        self.Slist=[10**(-26+(26-19)*n/100) for n in range(101)]
+        #self.Slist=[0,1,2,3,4,5,6,7,8,9,10]
+        #self.Slist=[10**(-26+(26-19)*n/100) for n in range(101)]
+        self.Slist=constants.Slist
 
         self.observations=[]
         self.P_S_sum=0
         self.memoizedict={}
-        #self.memoizedict2={}
+        self.memoizedict2={}
 
     def load_observations(self, filelist):
         f=open(filelist, 'rb')
@@ -86,22 +89,24 @@ class Bayes:
     def P_Nbpi(self, obs, Nbpi):
         top=PoissonApprox2(obs.Nmi,obs.Ci*Nbpi)
 
-        ##memoize the bottom part
-        #if obs.Nmi in self.memoizedict2:
-        #   if obs.Ci*Nbpi in self.memoizedict2[obs.Nmi]:
-        #       bottom=self.memoizedict2[obs.Nmi][obs.Ci*Nbpi]
-        #   else:
-        #       self.memoizedict2[obs.Nmi][obs.Ci*Nbpi]=math.fsum(\
-        #           [PoissonApprox2(obs.Nmi,obs.Ci*Nbpi2)\
-        #           for Nbpi2 in range(obs.Nmi*3)])
-        #       bottom=self.memoizedict2[obs.Nmi][obs.Ci*Nbpi]
-        #else:
-        #   self.memoizedict2[obs.Nmi]={}
-        #   self.memoizedict2[obs.Nmi][obs.Ci*Nbpi]=math.fsum(\
-        #       [PoissonApprox2(obs.Nmi,obs.Ci*Nbpi2)\
-        #       for Nbpi2 in range(obs.Nmi*3)])
-        #   bottom=self.memoizedict2[obs.Nmi][obs.Ci*Nbpi]
-        bottom=1.0/(obs.Ci)
+        if obs.Nmi>5:
+            bottom=1.0/(obs.Ci)
+        else:
+            #memoize the bottom part
+            if obs.Nmi in self.memoizedict2:
+                if obs.Ci*Nbpi in self.memoizedict2[obs.Nmi]:
+                    bottom=self.memoizedict2[obs.Nmi][obs.Ci*Nbpi]
+                else:
+                    self.memoizedict2[obs.Nmi][obs.Ci*Nbpi]=math.fsum(\
+                        [PoissonApprox2(obs.Nmi,obs.Ci*Nbpi2)\
+                        for Nbpi2 in range(obs.Nmi*3)])
+                    bottom=self.memoizedict2[obs.Nmi][obs.Ci*Nbpi]
+            else:
+                self.memoizedict2[obs.Nmi]={}
+                self.memoizedict2[obs.Nmi][obs.Ci*Nbpi]=math.fsum(\
+                    [PoissonApprox2(obs.Nmi,obs.Ci*Nbpi2)\
+                    for Nbpi2 in range(obs.Nmi*3)])
+                bottom=self.memoizedict2[obs.Nmi][obs.Ci*Nbpi]
         prob=top/bottom
 
         return prob
