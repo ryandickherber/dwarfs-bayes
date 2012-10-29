@@ -111,7 +111,7 @@ double continuum(double loge, int ichan) { /* loge is log_10 of energy in GeV */
 }
 
 double continuum_div_e(double e) {
-    return continuum(log10(e), ichan)/e;
+    return (1.0/log(10))*continuum(log10(e), ichan)/e;
 }
 
 double f(double x, void * params) {

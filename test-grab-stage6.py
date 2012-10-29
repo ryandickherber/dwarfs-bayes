@@ -86,13 +86,17 @@ for filename in filenames:
             obs.P_Ji=[1.0]
             runstatsTree=tf.Get("RunStatsTree")
             runstatsTree.GetEntry(0)
-            obs.Ci=runstatsTree.faLiveTime
-            obs.Ti=runstatsTree.fAlpha
+            #obs.Ci=runstatsTree.faLiveTime
+            #obs.Ti=runstatsTree.fAlpha
+            obs.Ci=1/runstatsTree.fAlpha
+            obs.Ti=runstatsTree.faLiveTime
             observations.append(obs)
 
 for obs in observations:
     #print(obs.Npi, obs.Nmi)
-    print obs
+    print("%s\t%s" % (obs.RunNum,obs.EnergyBinIndex))
+    obs.save("data_test_2/%s_%s.pickle" % (obs.RunNum,obs.EnergyBinIndex))
+    #print obs
 
 #
 #for (int i=0; i<entries; i++) {

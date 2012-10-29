@@ -1,3 +1,5 @@
+import math
+
 NE=31
 Estart=200.0
 Eincrement=0.15
@@ -16,10 +18,11 @@ for i in range(NM):
     if (i==0):
         Mlist.append(Mstart)
     else:
-        Mlist.append(Mstart+Mlist[i-1]*Mincrement)
+        Mlist.append(Mlist[i-1]+Mlist[i-1]*Mincrement)
 
 #Slist=[0,1,2,3,4,5,6,7,8,9,10]
-Slist=[10**(-26+(26-19)*n/100) for n in range(101)]
+#Slist=[10**(-26+(26-19)*n/100) for n in range(101)]
+Slist=[math.pow(10,(-26+(26-19)*(1.0*n)/100)) for n in range(101)]
 
 #J-factors... units are GeV^2cm^-5
 J_SEGUE=7.7e17
