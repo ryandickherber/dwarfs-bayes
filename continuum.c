@@ -18,15 +18,15 @@
 #define TAUTAU  9 //tau+/tau-?
 
 double m_chi=1000.0;   /* Mass of neutralino in GeV */
-int ichan=TAUTAU;
+int ichan=BB;
 #define NE 31
 double Erange[NE];
 double Eincrement=0.15;
-double Estart=200.0;
+double Estart=100.0;
 #define NM 30
 double Mlist[NM];
 double Mincrement=0.15;
-double Mstart=200.0;
+double Mstart=115.0;
 
 /*
 double alpha1[] = {0.95, 0.0, 1.1, 0.0, 0.0, 1.0, 0.73, 0.73, 0.0, 0.0} ;

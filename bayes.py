@@ -10,6 +10,7 @@ import constants
 class Observation:
     def __init__(self):
         self.RunNum=0
+        self.source=""
         self.EnergyBinIndex=0
         self.EnergyBin=[200.0,200.0+200.0*0.15]
 
@@ -79,7 +80,7 @@ class Bayes:
         self.Slist=constants.Slist
 
         self.observations=[]
-        self.P_S_sum=0
+        self.P_S_sum=0.0
         self.memoizedict={}
         self.memoizedict2={}
 
@@ -90,6 +91,9 @@ class Bayes:
             filename=line.strip()
             o=Observation()
             o=o.open(filename)
+            if o.Nmi==0.0 and o.Npi==0.0:
+                #TODO: Why is this necessary?
+                continue
             self.observations.append(o)
 
     def P_Nbpi(self, obs, Nbpi):
@@ -99,6 +103,7 @@ class Bayes:
         if obs.Nmi>5:
             bottom=1.0/(obs.Ci)
         else:
+            poissonrange=(obs.Npi*3+obs.Nmi*3+30)
             #memoize the bottom part
             if obs.Nmi in self.memoizedict2:
                 if obs.Ci*Nbpi in self.memoizedict2[obs.Nmi]:
@@ -106,15 +111,19 @@ class Bayes:
                 else:
                     self.memoizedict2[obs.Nmi][obs.Ci*Nbpi]=math.fsum(\
                         [PoissonApprox2(obs.Nmi,obs.Ci*Nbpi2)\
-                        for Nbpi2 in range(obs.Nmi*3)])
+                        for Nbpi2 in range(poissonrange)])
                     bottom=self.memoizedict2[obs.Nmi][obs.Ci*Nbpi]
             else:
                 self.memoizedict2[obs.Nmi]={}
                 self.memoizedict2[obs.Nmi][obs.Ci*Nbpi]=math.fsum(\
                     [PoissonApprox2(obs.Nmi,obs.Ci*Nbpi2)\
-                    for Nbpi2 in range(obs.Nmi*3)])
+                    for Nbpi2 in range(poissonrange)])
                 bottom=self.memoizedict2[obs.Nmi][obs.Ci*Nbpi]
-        #print("%s/%s" % (top, bottom))
+        if bottom==0.0:
+            print("%s/%s" % (top, bottom))
+            print("Nbpi: %s" % Nbpi)
+            print("Nmi: %s" % obs.Nmi)
+            print("Ci: %s" % obs.Ci)
         prob=top/bottom
 
         return prob
@@ -122,17 +131,24 @@ class Bayes:
     def P_Npi_JiAiEiNbpiS(self, obs, iJi, iAi, iEi, Nbpi, S):
         Mlisti=self.Mlisti
         Mchi=constants.Mlist[Mlisti]
+        area_cm2=obs.Ai[iEi][iAi]*10000
         Ngi=(S/(8*math.pi*(Mchi**2)))*\
             self.integrate_dNdE(Mlisti,obs.EnergyBinIndexes[iEi])\
-            *obs.Ai[iEi][iAi]*obs.Ti*obs.Ji[iJi]
+            *area_cm2*obs.Ti*obs.Ji[iJi]
         #Ngi=(S/(8*math.pi*(Mchi**2)))*\
         #    self.integrate_dNdE(obs.Eirange[iEi][0],obs.Eirange[iEi][1])\
         #    *obs.Ai[iEi][iAi]*obs.Ti*obs.Ji[iJi]
         lmbda=Nbpi+Ngi
         k=obs.Npi
-        prob=PoissonApprox2(k,lmbda)
+
+        #TODO: Is this correct?
+        integration_factor=constants.Slist_integration_factors[S]
+        #integration_factor=S/constants.Slist_sum
+        #integration_factor=1
+        prob=integration_factor*PoissonApprox2(k,lmbda)
+
         #print("P_Npi_JiAiEiNbpiS: %s" % prob)
-        return PoissonApprox2(k,lmbda)
+        return prob
 
     def P_Npi_NbpiS(self, obs, Nbpi, S):
         p=[]
@@ -154,6 +170,9 @@ class Bayes:
             for Nbpi in range(Nbpi_cutoff)]
         prob=math.fsum(p)
         #print("P_Npi_S: %s, %s, %s" % (prob, obs.Npi, S))
+        #if prob==0.0:
+        #    print("P_Npi_S==0 warning!")
+        #    print("Nbpi_cutoff: %s" % Nbpi_cutoff)
         return prob
 
     def P_S_Np_product(self, S):
@@ -161,12 +180,40 @@ class Bayes:
         T=[]
         for obs in self.observations:
             P=self.P_Npi_S(obs, S)
+            #if P<0.01:
+            #    #TODO: WTF
+            #    print("Warning: Low value of P! %s" % P)
+            #    from pprint import pprint
+            #    pprint(vars(obs))
+
             if P!=0.0:
                 T.append(math.log(P))
             else:
                 return 0.0
         t=math.fsum(T)
         t=math.exp(t)
+        #if t==0.0:
+        #    #TODO: WTF
+        #    print("t==0 warning!")
+        #    print("fsum: %s" % math.fsum(T))
+        #    print("exp: %s" % math.exp(math.fsum(T)))
+        #    product=1
+        #    for obs in self.observations:
+        #        P=self.P_Npi_S(obs, S)
+        #        print(product)
+        #        product=product*P
+        #    print("product: %s" % product)
+        #    print("P:")
+        #    for obs in self.observations:
+        #        P=self.P_Npi_S(obs, S)
+        #        if P<0.01:
+        #            print(P)
+        #        if obs.RunNum==50324:
+        #            from pprint import pprint
+        #            pprint(vars(obs))
+        #    #from pprint import pprint
+        #    #pprint(vars(obs))
+        #    #exit()
         return t
 
     def P_S_Np_product_memoized(self, S):
@@ -184,20 +231,28 @@ class Bayes:
     def P_S_Np(self, S):
         Mlisti=self.Mlisti
         top=self.P_S_Np_product_memoized(S)
-        bottom=0
+        bottom=0.0
         B=[]
-        if self.P_S_sum==0:
+        if self.P_S_sum==0.0:
             for S in self.Slist:
                 t=self.P_S_Np_product_memoized(S)
                 B.append(t)
             self.P_S_sum=math.fsum(B)
         bottom=self.P_S_sum
+        if bottom==0.0 and S==constants.Slist[-1]:
+            #hack...
+            return 0.0
+        if bottom==0.0:
+            print("S: %s" % S)
+            print("top: %s" % top)
+            print("bottom: %s" % bottom)
         #print("%s/%s" % (top, bottom))
         return top/bottom
     
     def P_S_Np_all(self):
         P_Slist=[]
-        for j,S in enumerate(self.Slist):
+        for j in range(constants.NS):
+            S=constants.Slist[j]
             P_Slist.append(self.P_S_Np(self.Slist[j]))
         return P_Slist
 
@@ -343,7 +398,8 @@ if __name__=="__main__":
     x=[]
     y=[]
     print("S\tP\tP_sum")
-    for j,S in enumerate(Slist):
+    for j in range(constants.NS):
+        S=constants.Slist[j]
         P=P_Slist[j]
         P_sum=P_sum+P
         x.append(P_sum)
