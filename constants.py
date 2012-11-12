@@ -20,6 +20,14 @@ for i in range(NM):
     else:
         Mlist.append(Mlist[i-1]+Mlist[i-1]*Mincrement)
 
+
+#HACK alert! Sadly, this number is necessarily.
+#It is canceled, but if I had to write this software again it wouldn't
+#be necessary. It becomes necessary to set this number arbitrarily high
+#when calculating lots of data due to the smallness of the P_Npi_S
+#probabilities.
+P_Npi_S_factor=100
+
 #Slist=[0,1,2,3,4,5,6,7,8,9,10]
 #Slist=[10**(-26+(26-19)*n/100) for n in range(101)]
 #Slist=[math.pow(10,(-29+(29-21)*(1.0*n)/100)) for n in range(101)]
@@ -28,7 +36,7 @@ for i in range(NM):
 #use this:
 #Slist=[math.pow(10,(-40+(40-19)*(1.0*n)/100)) for n in range(101)]
 NS=100
-f=lambda n : math.pow(10,(-22+(22-19)*(1.0*n)/NS))
+f=lambda n : math.pow(10,(-26+(26-21)*(1.0*n)/NS))
 Slist=[f(n) for n in range(NS+1)]
 Slist_sum=math.fsum(Slist)
 
@@ -50,3 +58,4 @@ J_Draco=4*3.832e17
 J_UrsaMinor=7*3.832e17
 J_BOOTES1=3*3.832e17
 J_WilmanI=22*3.832e17
+

@@ -135,17 +135,19 @@ class Bayes:
         Ngi=(S/(8*math.pi*(Mchi**2)))*\
             self.integrate_dNdE(Mlisti,obs.EnergyBinIndexes[iEi])\
             *area_cm2*obs.Ti*obs.Ji[iJi]
+
         #Ngi=(S/(8*math.pi*(Mchi**2)))*\
         #    self.integrate_dNdE(obs.Eirange[iEi][0],obs.Eirange[iEi][1])\
         #    *obs.Ai[iEi][iAi]*obs.Ti*obs.Ji[iJi]
         lmbda=Nbpi+Ngi
         k=obs.Npi
 
+        prob=PoissonApprox2(k,lmbda)
         #TODO: Is this correct?
-        integration_factor=constants.Slist_integration_factors[S]
+        #integration_factor=constants.Slist_integration_factors[S]
         #integration_factor=S/constants.Slist_sum
         #integration_factor=1
-        prob=integration_factor*PoissonApprox2(k,lmbda)
+        #prob=integration_factor*prob
 
         #print("P_Npi_JiAiEiNbpiS: %s" % prob)
         return prob
@@ -173,6 +175,10 @@ class Bayes:
         #if prob==0.0:
         #    print("P_Npi_S==0 warning!")
         #    print("Nbpi_cutoff: %s" % Nbpi_cutoff)
+
+#TODO: Hack alert! (This shouldn't affect the answer because it is canceled)
+        prob=constants.P_Npi_S_factor*prob
+
         return prob
 
     def P_S_Np_product(self, S):
@@ -231,11 +237,13 @@ class Bayes:
     def P_S_Np(self, S):
         Mlisti=self.Mlisti
         top=self.P_S_Np_product_memoized(S)
+        top=100*constants.Slist_integration_factors[S]*top
         bottom=0.0
         B=[]
         if self.P_S_sum==0.0:
             for S in self.Slist:
                 t=self.P_S_Np_product_memoized(S)
+                t=100*constants.Slist_integration_factors[S]*t
                 B.append(t)
             self.P_S_sum=math.fsum(B)
         bottom=self.P_S_sum
