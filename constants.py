@@ -36,7 +36,7 @@ P_Npi_S_factor=100
 #use this:
 #Slist=[math.pow(10,(-40+(40-19)*(1.0*n)/100)) for n in range(101)]
 NS=100
-f=lambda n : math.pow(10,(-26+(26-21)*(1.0*n)/NS))
+f=lambda n : math.pow(10,(-24+(24-19)*(1.0*n)/NS))
 Slist=[f(n) for n in range(NS+1)]
 Slist_sum=math.fsum(Slist)
 
