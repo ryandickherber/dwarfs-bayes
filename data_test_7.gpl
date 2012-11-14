@@ -1,0 +1,8 @@
+set xlabel "Mass (GeV)"
+set ylabel "Cross-section (cm^3/s)"
+set log x
+set log y
+set format y "%e"
+set terminal postscript landscape enhanced "Palatino-Roman" 16
+set out "data_test_7.ps"
+plot 'data_test_7.BB', 'data_test_7.TAUTAU' with lines
